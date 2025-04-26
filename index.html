@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="myProject.css">
+    <title>Jean's Birthday Party - Create Wallet</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Jean's Birthday Party</div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link active">Create Wallet</a></li>
+            <li><a href="check-balance.html" class="nav-link">Check Balance</a></li>
+            <li><a href="buy-tickets.html" class="nav-link">Buy Tickets</a></li>
+            <li><a href="redeem-tickets.html" class="nav-link">Redeem Tickets</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>Create Your Wallet</h2>
+            <p>Create a new wallet to start purchasing and managing your party tickets.</p>
+            <button id="createWalletButton">Create New Wallet</button>
+            <input type="password" id="password" placeholder="Enter wallet password">
+            <button id="downloadKeystore">Download Keystore</button>
+            <div class="wallet-details">
+                <h3>Wallet Details</h3>
+                <div class="detail-item">
+                    <label>Address:</label>
+                    <textarea id="walletAddress" readonly></textarea>
+                </div>
+                <div class="detail-item">
+                    <label>Private Key:</label>
+                    <textarea id="privateKey" readonly></textarea>
+                </div>
+                <div class="detail-item">
+                    <label>Keystore:</label>
+                    <textarea id="keystore" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal">&times;</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="wallet-management.js"></script>
+</body>
+</html>

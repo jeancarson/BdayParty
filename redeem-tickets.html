@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="myProject.css">
+    <title>Jean's Birthday Party - Redeem Tickets</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Jean's Birthday Party</div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Create Wallet</a></li>
+            <li><a href="check-balance.html" class="nav-link">Check Balance</a></li>
+            <li><a href="buy-tickets.html" class="nav-link">Buy Tickets</a></li>
+            <li><a href="redeem-tickets.html" class="nav-link active">Redeem Tickets</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>Redeem Party Tickets</h2>
+            
+            <div class="wallet-input">
+                <input type="file" id="keystoreFile" accept=".json">
+                <input type="password" id="password" placeholder="Enter wallet password">
+                <button id="loadWallet">Load Wallet</button>
+            </div>
+
+            <div class="return-section">
+                <div class="wallet-status">
+                    <h3>Wallet Status</h3>
+                    <p>Address: <span id="walletAddress">Not loaded</span></p>
+                    <p>Current Tickets: <span id="currentTickets">0</span></p>
+                </div>
+
+                <div class="return-form">
+                    <h3>Redeem Your Party Tickets</h3>
+                    <div class="form-group">
+                        <label for="ticketsToRedeem">Number of Tickets to Redeem:</label>
+                        <input type="number" id="ticketsToRedeem" min="1" value="1">
+                    </div>
+                    <button id="useButton" disabled>Redeem Tickets</button>
+                </div>
+
+                <div class="info-box">
+                    <h3>Important Information</h3>
+                    <ul>
+                        <li>Tickets are redeemed at the party entrance</li>
+                        <li>Each ticket allows one person to enter the party</li>
+                        <li>Redeemed tickets cannot be recovered</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal">&times;</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="redeem-tickets.js"></script>
+</body>
+</html>

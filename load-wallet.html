@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="myProject.css">
+    <title>ANDY Token Manager - Load Wallet</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">ANDY Token Manager</div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Wallet Management</a></li>
+            <li><a href="load-wallet.html" class="nav-link active">Load Wallet</a></li>
+            <li><a href="token-operations.html" class="nav-link">Token Operations</a></li>
+            <li><a href="transactions.html" class="nav-link">Transaction Details</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>Load Existing Wallet</h2>
+            <input type="password" id="loadPassword" placeholder="Enter password">
+            <input type="file" id="keystoreFile" accept=".json">
+            <button id="loadWalletButton">Load Wallet</button>
+            <textarea id="walletAddress" placeholder="Loaded Wallet Address" readonly></textarea>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal">&times;</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="load-wallet.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="myProject.css">
+    <title>Jean's Birthday Party - Check Balance</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Jean's Birthday Party</div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Create Wallet</a></li>
+            <li><a href="check-balance.html" class="nav-link active">Check Balance</a></li>
+            <li><a href="buy-tickets.html" class="nav-link">Buy Tickets</a></li>
+            <li><a href="redeem-tickets.html" class="nav-link">Redeem Tickets</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>Check Wallet Balance</h2>
+            <div class="wallet-input">
+                <input type="file" id="keystoreFile" accept=".json">
+                <input type="password" id="password" placeholder="Enter wallet password">
+                <button id="loadWallet">Load Wallet</button>
+            </div>
+
+            <div class="balance-display">
+                <div class="balance-item">
+                    <h3>Wallet Details</h3>
+                    <p>Address: <span id="walletAddress"></span></p>
+                    <p>Network: <span id="network"></span></p>
+                </div>
+                
+                <div class="balance-item">
+                    <h3>Balances</h3>
+                    <p>ETH Balance: <span id="ethBalance">0</span> ETH</p>
+                    <p>Tickets Owned: <span id="ticketBalance">0</span></p>
+                </div>
+
+                <div class="keystore-details">
+                    <h3>Keystore Details</h3>
+                    <div id="keystoreInfo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal">&times;</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="check-balance.js"></script>
+</body>
+</html> 
