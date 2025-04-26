@@ -19,6 +19,17 @@ async function initWeb3() {
     return true;
 }
 
+function setLoading(buttonId, isLoading) {
+    const button = document.getElementById(buttonId);
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = buttonId === 'purchaseButton' ? !currentWallet : false;
+    }
+}
+
 async function loadWallet() {
     const fileInput = document.getElementById('keystoreFile');
     const password = document.getElementById('password').value;
@@ -28,6 +39,7 @@ async function loadWallet() {
         return;
     }
 
+    setLoading('loadWallet', true);
     const reader = new FileReader();
     reader.onload = async function(e) {
         try {
@@ -54,6 +66,8 @@ async function loadWallet() {
             await updateEventInfo();
         } catch (error) {
             showError('Failed to decrypt wallet: ' + error.message);
+        } finally {
+            setLoading('loadWallet', false);
         }
     };
     reader.readAsText(fileInput.files[0]);
@@ -99,6 +113,7 @@ async function purchaseTickets() {
     }
 
     try {
+        setLoading('purchaseButton', true);
         const price = await contract.methods.ticketPrice().call();
         const totalCost = new web3.utils.BN(price).mul(new web3.utils.BN(numberOfTickets));
 
@@ -129,6 +144,8 @@ async function purchaseTickets() {
         showSuccess('Successfully purchased ' + numberOfTickets + ' tickets!');
     } catch (error) {
         showError('Failed to purchase tickets: ' + error.message);
+    } finally {
+        setLoading('purchaseButton', false);
     }
 }
 

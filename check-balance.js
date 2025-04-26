@@ -19,6 +19,17 @@ async function initWeb3() {
     return true;
 }
 
+function setLoading(buttonId, isLoading) {
+    const button = document.getElementById(buttonId);
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+    }
+}
+
 async function loadWallet() {
     const fileInput = document.getElementById('keystoreFile');
     const password = document.getElementById('password').value;
@@ -28,6 +39,7 @@ async function loadWallet() {
         return;
     }
 
+    setLoading('loadWallet', true);
     const reader = new FileReader();
     reader.onload = async function(e) {
         try {
@@ -56,6 +68,8 @@ async function loadWallet() {
             displayKeystoreDetails(keystore);
         } catch (error) {
             showError('Failed to decrypt wallet: ' + error.message);
+        } finally {
+            setLoading('loadWallet', false);
         }
     };
     reader.readAsText(fileInput.files[0]);
