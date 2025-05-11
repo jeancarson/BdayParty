@@ -1,152 +1,97 @@
-# Birthday Party Ticket System 🎈
+# Jean's Birthday Party - Ticket Management System
 
 A decentralized ticket management system built on the Ethereum blockchain (Holesky testnet) for managing party entry tickets. This dApp allows users to purchase, check, and redeem tickets for the party using smart contracts.
 
-## Features 🌟
+## Project Structure
 
-- Create and manage Ethereum wallets
-- Purchase party tickets using ETH
-- Check ticket balances and transaction history
-- Redeem tickets at the party entrance
-- Secure wallet encryption/decryption
-- Real-time blockchain interaction
-- Loading indicators for all blockchain operations
+```
+BdayParty/
+├── css/                  # CSS stylesheets
+│   └── styles.css     # Main stylesheet
+├── js/                   # JavaScript files
+│   ├── shared.js         # Shared utility functions
+│   ├── index.js          # Wallet creation functionality
+│   ├── check-balance.js  # Balance checking functionality
+│   ├── buy-tickets.js    # Ticket purchasing functionality
+│   └── redeem-tickets.js # Ticket redemption functionality
+├── img/                  # Image assets
+│   └── balloons.jpg      # Party graphics
+├── contracts/            # Smart contracts
+│   └── EventTicket.sol   # ERC-20 token contract for tickets
+├── index.html            # Entry point - Create wallet page
+├── check-balance.html    # Check wallet and ticket balance
+├── buy-tickets.html      # Purchase tickets page
+├── redeem-tickets.html   # Redeem tickets page
+├── test.html             # Testing utilities
+└── package.json          # Project configuration
+```
 
-## Technical Stack 💻
+## Features
 
-- **Frontend**: HTML, CSS, JavaScript
-- **Blockchain**: Ethereum (Holesky Testnet)
-- **Web3 Library**: web3.js
-- **Smart Contract**: Solidity (ERC20-based)
-- **Design**: Custom CSS with responsive design
+- **Create Wallet**: Generate a new Ethereum wallet and download keystore
+- **Check Balance**: View ETH balance and ticket holdings
+- **Buy Tickets**: Purchase tickets using ETH (Holesky testnet)
+- **Redeem Tickets**: Use tickets to gain entry to the party
 
-## Smart Contract Details 📄
-
-The `PartyTicket` smart contract (`EventTicket.sol`) is deployed on the Holesky testnet and implements:
-
-- ERC20 token standard for ticket representation
-- Fixed ticket price: 0.01 ETH
-- Maximum supply: 1000 tickets
-- Ticket purchase functionality
-- Ticket redemption system
-- Owner withdrawal capabilities
-
-Contract Address: `0x77481B4bd23Ef04Fbd649133E5955b723863C52D`
-
-## Getting Started 🚀
+## Getting Started
 
 ### Prerequisites
 
-- Modern web browser
+- Modern web browser with JavaScript enabled
 - Internet connection
-- Some Holesky testnet ETH (for purchasing tickets)
+- For development: Node.js and Python
 
-### Using the Application
+### Installation
 
-1. **Create a Wallet**
-   - Visit the "Create Wallet" page
-   - Enter a secure password
-   - Download and safely store your keystore file
-   - Keep your private key secure
+1. Clone this repository:
+   ```
+   git clone <repository-url>
+   cd BdayParty
+   ```
 
-2. **Purchase Tickets**
-   - Go to "Buy Tickets"
-   - Load your wallet using the keystore file
-   - Enter the number of tickets you want
-   - Confirm the transaction with sufficient ETH
+2. Start a server:
 
-3. **Check Balance**
-   - Visit "Check Balance"
-   - Load your wallet
-   - View your ETH and ticket balances
-   - See network and wallet details
+   Open `index.html`with live server
 
-4. **Redeem Tickets**
-   - Go to "Redeem Tickets"
-   - Load your wallet
-   - Enter the number of tickets to redeem
-   - Confirm the redemption
+### Usage Guide
 
-## Security Features 🔒
+1. **Create a Wallet**:
+   - Open the application in your browser
+   - Enter a password
+   - Click "Create New Wallet"
+   - Download the keystore file for safekeeping
 
-- Client-side wallet encryption/decryption
-- No private key storage on servers
-- Secure keystore file generation
-- Transaction signing on client side
-- Loading states to prevent double submissions
+2. **Check Balance**:
+   - Navigate to the "Check Balance" page
+   - Upload your keystore file and enter your password
+   - View your ETH balance and tickets owned
 
-## File Structure 📁
+3. **Buy Tickets**:
+   - Navigate to the "Buy Tickets" page
+   - Upload your keystore file and enter your password
+   - Select the number of tickets to purchase
+   - Click "Purchase Tickets"
 
+4. **Redeem Tickets**:
+   - Navigate to the "Redeem Tickets" page
+   - Upload your keystore file and enter your password
+   - Select the number of tickets to redeem
+   - Click "Redeem Tickets"
+
+## Smart Contract
+
+The tickets are implemented as ERC-20 tokens on the Ethereum Holesky testnet. The contract address is:
 ```
-├── index.html           # Wallet creation page
-├── buy-tickets.html     # Ticket purchase interface
-├── check-balance.html   # Balance checking interface
-├── redeem-tickets.html  # Ticket redemption interface
-├── EventTicket.sol      # Smart contract
-├── myProject.css        # Styling
-├── shared.js           # Shared utilities
-└── Various .js files   # Page-specific logic
+0x77481B4bd23Ef04Fbd649133E5955b723863C52D
 ```
 
-## Usage Tips 💡
+## Technical Details
 
-1. **Wallet Security**
-   - Always keep your keystore file safe
-   - Never share your private key
-   - Use a strong password for encryption
+- Built with vanilla JavaScript, HTML, and CSS
+- Uses Web3.js for Ethereum blockchain interaction
+- Implements multiple RPC provider fallbacks for reliability
+- Supports keystores for secure wallet storage
 
-2. **Transactions**
-   - Ensure sufficient ETH for gas fees
-   - Wait for transaction confirmations
-   - Check transaction status in MetaMask or block explorer
+## License
 
-3. **Ticket Management**
-   - Purchase tickets early due to limited supply
-   - Keep track of your ticket balance
-   - Redeem tickets only at the party entrance
-
-## Error Handling 🔧
-
-The application includes comprehensive error handling for:
-- Failed transactions
-- Network issues
-- Invalid inputs
-- Insufficient funds
-- Contract interaction failures
-
-## Development 👨‍💻
-
-To modify or extend the application:
-
-1. Clone the repository
-2. Make sure you have Node.js and npm installed
-3. Install web3.js and other dependencies
-4. Deploy your own version of the smart contract
-5. Update the contract address in the JavaScript files
-
-## Testing 🧪
-
-The application can be tested using:
-- Holesky testnet
-- Local Ethereum node
-- Ganache for local development
-
-## Contributing 🤝
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
-
-## License 📜
-
-This project is licensed under the MIT License.
-
-## Support 💪
-
-For support or questions:
-1. Open an issue in the repository
-2. Contact the development team
-3. Check the smart contract on Etherscan
-
-Remember to never share private keys or passwords when seeking support! 
+ISC License 

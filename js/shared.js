@@ -1,4 +1,4 @@
-const web3 = new Web3("https://holesky.drpc.org");
+const web3 = new Web3("https://ethereum-holesky.publicnode.com");
 const tokenAddress = "0x1FDCAFCA56B606F4bF89D29b64673a43c15AF38A";
 
 const tokenABI = [
@@ -65,7 +65,7 @@ function showError(message) {
     errorModal.style.display = 'block';
 }
 
-function showSuccess(message) {
+function showSuccess(message, duration = 5000) {
     // Remove any existing success message
     const existingSuccess = document.querySelector('.success-message');
     if (existingSuccess) {
@@ -80,11 +80,11 @@ function showSuccess(message) {
     // Insert after the last form in the section
     const section = document.querySelector('.section');
     section.appendChild(successDiv);
-
-    // Auto-hide after 5 seconds
+    
+    // Auto-hide after specified duration
     setTimeout(() => {
         successDiv.remove();
-    }, 5000);
+    }, duration);
 }
 
 // Wallet utilities

@@ -2,12 +2,18 @@
   "name": "bdayparty",
   "version": "1.0.0",
   "description": "A decentralized ticket management system built on the Ethereum blockchain (Holesky testnet) for managing party entry tickets. This dApp allows users to purchase, check, and redeem tickets for the party using smart contracts.",
-  "main": "buy-tickets.js",
-  "type": "module",
+  "main": "index.html",
   "scripts": {
-    "start": "python -m http.server 8000"
+    "start": "python -m http.server 8000",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "ethereum",
+    "blockchain",
+    "tickets",
+    "dapp",
+    "web3"
+  ],
   "author": "",
   "license": "ISC"
 }

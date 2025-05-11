@@ -1,6 +1,7 @@
 let contract;
 let currentWallet;
 const contractAddress = '0x77481B4bd23Ef04Fbd649133E5955b723863C52D';
+let isTransactionPending = false; // Track if there's a pending transaction
 
 const contractABI = [
     {
@@ -41,18 +42,45 @@ const contractABI = [
 ];
 
 async function initWeb3() {
+    // List of Holesky RPC providers to try in order
+    const rpcProviders = [
+        "https://ethereum-holesky.publicnode.com",
+        "https://1rpc.io/holesky",
+        "https://holesky.api.onfinality.io/public",
+        "https://holesky.blockpi.network/v1/rpc/public",
+        "https://holesky.drpc.org"
+    ];
+    
+    // Use MetaMask if available
     if (typeof window.ethereum !== 'undefined') {
         window.web3 = new Web3(window.ethereum);
         try {
             await window.ethereum.request({ method: 'eth_requestAccounts' });
+            console.log("Using MetaMask provider");
+            return true;
         } catch (error) {
-            console.warn('MetaMask not connected, falling back to Holesky RPC');
-            window.web3 = new Web3("https://holesky.drpc.org");
+            console.warn("MetaMask connection failed, trying other RPC providers");
+            // Fall through to RPC providers
         }
-    } else {
-        window.web3 = new Web3("https://holesky.drpc.org");
     }
-    return true;
+    
+    // Try each RPC provider until one works
+    for (const rpcUrl of rpcProviders) {
+        try {
+            console.log(`Trying RPC provider: ${rpcUrl}`);
+            window.web3 = new Web3(rpcUrl);
+            
+            // Test the connection
+            await window.web3.eth.net.isListening();
+            console.log(`Successfully connected to ${rpcUrl}`);
+            return true;
+        } catch (error) {
+            console.warn(`RPC provider ${rpcUrl} failed:`, error.message);
+        }
+    }
+    
+    showError("Failed to connect to any Ethereum RPC provider. Please try again later.");
+    return false;
 }
 
 function setLoading(buttonId, isLoading) {
@@ -102,6 +130,12 @@ async function redeemTickets() {
         return;
     }
 
+    // Prevent multiple transactions while one is pending
+    if (isTransactionPending) {
+        showError('A transaction is already in progress. Please wait for it to complete.');
+        return;
+    }
+
     const ticketsToRedeem = parseInt(document.getElementById('ticketsToRedeem').value);
     if (!ticketsToRedeem || ticketsToRedeem <= 0) {
         showError('Please enter a valid number of tickets to redeem');
@@ -109,36 +143,77 @@ async function redeemTickets() {
     }
 
     try {
+        // Check if user has enough tickets to redeem
+        const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+        if (parseInt(ticketBalance) < ticketsToRedeem) {
+            showError(`You don't have enough tickets. Your current balance is ${ticketBalance} tickets.`);
+            return;
+        }
+
         setLoading('useButton', true);
+        isTransactionPending = true; // Mark transaction as pending
+        
         const tx = contract.methods.useTicket(ticketsToRedeem);
         const gas = await tx.estimateGas({ from: currentWallet.address });
+
+        // Get current nonce to ensure transaction uniqueness
+        const nonce = await web3.eth.getTransactionCount(currentWallet.address, 'pending');
 
         const signedTx = await web3.eth.accounts.signTransaction({
             to: contractAddress,
             data: tx.encodeABI(),
             gas: gas,
-            from: currentWallet.address
+            from: currentWallet.address,
+            nonce: nonce // Add explicit nonce to prevent duplicates
         }, currentWallet.privateKey);
 
-        // Send the transaction and ignore any receipt-related errors
-        try {
-            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-            showSuccess(`Successfully redeemed ${ticketsToRedeem} tickets!`);
-            await updateBalance();
-        } catch (error) {
-            // If the error is about receipt, ignore it since the transaction went through
-            if (error.message.includes('receipt')) {
-                showSuccess(`Successfully redeemed ${ticketsToRedeem} tickets!`);
-                await updateBalance();
-            } else {
-                throw error; // Re-throw other errors
-            }
-        }
+        // Send the transaction without waiting for confirmation
+        web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+            .on('transactionHash', (hash) => {
+                console.log('Transaction hash:', hash);
+                showSuccess(`Transaction sent! ${ticketsToRedeem} tickets redeemed. Transaction hash: ${hash}`, 10000);
+                
+                // Update UI after a short delay
+                setTimeout(async () => {
+                    try {
+                        await updateBalance();
+                    } catch (updateError) {
+                        console.error('Balance update error:', updateError);
+                    } finally {
+                        setLoading('useButton', false);
+                        isTransactionPending = false; // Reset transaction pending status
+                    }
+                }, 3000);
+            })
+            .on('error', (error) => {
+                console.error('Transaction error:', error);
+                
+                // Handle common errors with more user-friendly messages
+                if (error.message.includes('already known')) {
+                    showSuccess('Your transaction was already submitted and is being processed.', 10000);
+                } else if (error.message.includes('Insufficient tickets')) {
+                    showError('You do not have enough tickets to complete this redemption.');
+                } else {
+                    showError('Failed to redeem tickets: ' + error.message);
+                }
+                
+                setLoading('useButton', false);
+                isTransactionPending = false; // Reset transaction pending status
+            });
     } catch (error) {
-        console.error('Redemption error:', error);
-        showError('Failed to redeem tickets: ' + error.message);
-    } finally {
+        console.error('Redemption preparation error:', error);
+        
+        // Handle preparation errors with more user-friendly messages
+        if (error.message.includes('Insufficient tickets')) {
+            showError('You do not have enough tickets to redeem. Please check your ticket balance.');
+        } else if (error.message.includes('gas required exceeds allowance')) {
+            showError('Transaction would exceed gas limits. Try redeeming fewer tickets.');
+        } else {
+            showError('Failed to prepare transaction: ' + error.message);
+        }
+        
         setLoading('useButton', false);
+        isTransactionPending = false; // Reset transaction pending status
     }
 }
 
