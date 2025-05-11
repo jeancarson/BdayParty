@@ -3,6 +3,8 @@
 <head>
     <title>Party Ticket System Tests</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,8 +68,14 @@
             
             // Test Web3 Connection
             try {
-                if (typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined') {
-                    addResult('Web3 Connection', true, 'Web3 is available');
+                // Check if Web3 is already initialized from shared.js
+                if (typeof web3 !== 'undefined') {
+                    const isConnected = await web3.eth.net.isListening();
+                    if (isConnected) {
+                        addResult('Web3 Connection', true, 'Web3 is available and connected');
+                    } else {
+                        addResult('Web3 Connection', false, 'Web3 is available but not connected');
+                    }
                 } else {
                     addResult('Web3 Connection', false, 'Web3 is not available');
                 }
@@ -110,34 +118,44 @@
 
             // Test Ticket Price
             try {
-                const contract = new web3.eth.Contract([{
-                    "inputs": [],
-                    "name": "ticketPrice",
-                    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                    "stateMutability": "view",
-                    "type": "function"
-                }], '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
+                const contractABI = [
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "ticketPrice",
+                        "outputs": [{"name": "", "type": "uint256"}],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
                 
+                const contract = new web3.eth.Contract(contractABI, '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
                 const price = await contract.methods.ticketPrice().call();
                 addResult('Ticket Price', true, `Ticket price: ${web3.utils.fromWei(price, 'ether')} ETH`);
             } catch (error) {
-                addResult('Ticket Price', false, error.message);
+                addResult('Ticket Price', false, `Error checking ticket price: ${error.message}`);
             }
 
-            // Test Available Tickets
+            // Test Vendor Address
             try {
-                const contract = new web3.eth.Contract([{
-                    "inputs": [],
-                    "name": "vendor",
-                    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                    "stateMutability": "view",
-                    "type": "function"
-                }], '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
+                const contractABI = [
+                    {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "owner",
+                        "outputs": [{"name": "", "type": "address"}],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
                 
-                const vendorAddress = await contract.methods.vendor().call();
+                const contract = new web3.eth.Contract(contractABI, '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
+                const vendorAddress = await contract.methods.owner().call();
                 addResult('Vendor Address', true, `Vendor address: ${vendorAddress}`);
             } catch (error) {
-                addResult('Vendor Address', false, error.message);
+                addResult('Vendor Address', false, `Error checking vendor address: ${error.message}`);
             }
         }
     </script>
