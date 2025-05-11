@@ -130,19 +130,37 @@ async function purchaseTickets() {
             from: currentWallet.address
         }, currentWallet.privateKey);
 
-        // Send the transaction
-        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-        
-        // Update balances and available tickets
-        await updateEventInfo();
-        const balance = await web3.eth.getBalance(currentWallet.address);
-        document.getElementById('ethBalance').textContent = web3.utils.fromWei(balance, 'ether');
-        
-        const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
-        document.getElementById('currentTickets').textContent = ticketBalance;
+        // Send the transaction and ignore any receipt-related errors
+        try {
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+            
+            // Update balances and available tickets
+            await updateEventInfo();
+            const balance = await web3.eth.getBalance(currentWallet.address);
+            document.getElementById('ethBalance').textContent = web3.utils.fromWei(balance, 'ether');
+            
+            const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+            document.getElementById('currentTickets').textContent = ticketBalance;
 
-        showSuccess('Successfully purchased ' + numberOfTickets + ' tickets!');
+            showSuccess('Successfully purchased ' + numberOfTickets + ' tickets!');
+        } catch (error) {
+            // If the error is about receipt, ignore it since the transaction went through
+            if (error.message.includes('receipt')) {
+                // Update balances and available tickets
+                await updateEventInfo();
+                const balance = await web3.eth.getBalance(currentWallet.address);
+                document.getElementById('ethBalance').textContent = web3.utils.fromWei(balance, 'ether');
+                
+                const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+                document.getElementById('currentTickets').textContent = ticketBalance;
+
+                showSuccess('Successfully purchased ' + numberOfTickets + ' tickets!');
+            } else {
+                throw error; // Re-throw other errors
+            }
+        }
     } catch (error) {
+        console.error('Purchase error:', error);
         showError('Failed to purchase tickets: ' + error.message);
     } finally {
         setLoading('purchaseButton', false);

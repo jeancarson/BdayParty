@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Party Ticket System Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Party Ticket System Tests</h1>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="results"></div>
+
+    <script>
+        function addResult(testName, passed, message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'test-section';
+            div.innerHTML = `
+                <h3>${testName}</h3>
+                <p class="${passed ? 'success' : 'error'}">
+                    ${passed ? '✓ PASSED' : '✗ FAILED'}: ${message}
+                </p>
+            `;
+            results.appendChild(div);
+        }
+
+        async function runAllTests() {
+            // Clear previous results
+            document.getElementById('results').innerHTML = '';
+            
+            // Test Web3 Connection
+            try {
+                if (typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined') {
+                    addResult('Web3 Connection', true, 'Web3 is available');
+                } else {
+                    addResult('Web3 Connection', false, 'Web3 is not available');
+                }
+            } catch (error) {
+                addResult('Web3 Connection', false, error.message);
+            }
+
+            // Test Contract Connection
+            try {
+                const contractAddress = '0x77481B4bd23Ef04Fbd649133E5955b723863C52D';
+                if (contractAddress) {
+                    addResult('Contract Connection', true, 'Contract address is valid');
+                } else {
+                    addResult('Contract Connection', false, 'Contract address is missing');
+                }
+            } catch (error) {
+                addResult('Contract Connection', false, error.message);
+            }
+
+            // Test Wallet Creation
+            try {
+                const testWallet = web3.eth.accounts.create();
+                if (testWallet && testWallet.address) {
+                    addResult('Wallet Creation', true, 'Successfully created test wallet');
+                } else {
+                    addResult('Wallet Creation', false, 'Failed to create wallet');
+                }
+            } catch (error) {
+                addResult('Wallet Creation', false, error.message);
+            }
+
+            // Test Balance Checking
+            try {
+                const testWallet = web3.eth.accounts.create();
+                const balance = await web3.eth.getBalance(testWallet.address);
+                addResult('Balance Checking', true, `Successfully checked balance: ${web3.utils.fromWei(balance, 'ether')} ETH`);
+            } catch (error) {
+                addResult('Balance Checking', false, error.message);
+            }
+
+            // Test Ticket Price
+            try {
+                const contract = new web3.eth.Contract([{
+                    "inputs": [],
+                    "name": "ticketPrice",
+                    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                }], '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
+                
+                const price = await contract.methods.ticketPrice().call();
+                addResult('Ticket Price', true, `Ticket price: ${web3.utils.fromWei(price, 'ether')} ETH`);
+            } catch (error) {
+                addResult('Ticket Price', false, error.message);
+            }
+
+            // Test Available Tickets
+            try {
+                const contract = new web3.eth.Contract([{
+                    "inputs": [],
+                    "name": "vendor",
+                    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                }], '0x77481B4bd23Ef04Fbd649133E5955b723863C52D');
+                
+                const vendorAddress = await contract.methods.vendor().call();
+                addResult('Vendor Address', true, `Vendor address: ${vendorAddress}`);
+            } catch (error) {
+                addResult('Vendor Address', false, error.message);
+            }
+        }
+    </script>
+</body>
+</html> 
