@@ -1,8 +1,7 @@
-// Wallet creation and management for index.html
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", function() {
     // Create Wallet
-    $("#createWalletButton").click(function() {
-        const password = $("#password").val();
+    document.getElementById("createWalletButton").addEventListener("click", function() {
+        const password = document.getElementById("password").value;
         if (!password) {
             showError("Please enter a password");
             return;
@@ -10,10 +9,10 @@ $(document).ready(function() {
 
         try {
             const wallet = web3.eth.accounts.create();
-            $("#walletAddress").val(wallet.address);
-            $("#privateKey").val(wallet.privateKey);
+            document.getElementById("walletAddress").value = wallet.address;
+            document.getElementById("privateKey").value = wallet.privateKey;
             const keystore = web3.eth.accounts.encrypt(wallet.privateKey, password);
-            $("#keystore").val(JSON.stringify(keystore, null, 2));
+            document.getElementById("keystore").value = JSON.stringify(keystore, null, 2);
             
             showSuccess("Wallet created successfully!");
         } catch (error) {
@@ -22,8 +21,8 @@ $(document).ready(function() {
     });
 
     // Download Keystore
-    $("#downloadKeystore").click(function() {
-        const keystore = $("#keystore").val();
+    document.getElementById("downloadKeystore").addEventListener("click", function() {
+        const keystore = document.getElementById("keystore").value;
         if (!keystore) {
             showError("Please create a wallet first");
             return;
@@ -45,8 +44,7 @@ $(document).ready(function() {
         }
     });
 
-    // Close Modal (moved to shared.js)
-    $("#closeModal").click(function() {
-        $("#errorModal").css("display", "none");
+    document.getElementById("closeModal").addEventListener("click", function() {
+        document.getElementById("errorModal").style.display = "none";
     });
-}); 
+});

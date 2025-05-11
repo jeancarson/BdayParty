@@ -1,127 +1,139 @@
 const web3 = new Web3("https://ethereum-holesky.publicnode.com");
-const tokenAddress = "0x1FDCAFCA56B606F4bF89D29b64673a43c15AF38A";
+const contractAddress = '0x77481B4bd23Ef04Fbd649133E5955b723863C52D';
 
-const tokenABI = [
+const contractABI = [
     {
-        "constant": true,
-        "inputs": [{"name": "account", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"name": "", "type": "uint256"}],
-        "payable": false,
+        "inputs": [],
+        "name": "ticketPrice",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
         "stateMutability": "view",
         "type": "function"
     },
     {
-        "constant": false,
+        "inputs": [],
+        "name": "vendor",
+        "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+        "name": "balanceOf",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "uint256", "name": "numberOfTickets", "type": "uint256" }],
+        "name": "buyTickets",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "uint256", "name": "numberOfTickets", "type": "uint256" }],
+        "name": "useTicket",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [
-            {"name": "recipient", "type": "address"},
-            {"name": "amount", "type": "uint256"}
+            { "name": "recipient", "type": "address" },
+            { "name": "amount", "type": "uint256" }
         ],
         "name": "transfer",
-        "outputs": [{"name": "", "type": "bool"}],
-        "payable": false,
+        "outputs": [{ "name": "", "type": "bool" }],
         "stateMutability": "nonpayable",
         "type": "function"
     }
 ];
 
-const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-// Error modal handling
-$(document).ready(function() {
-    $("#closeModal").click(function() {
-        $("#errorModal").css("display", "none");
+// Reference to event listener for cleanup
+let closeModalListener;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener with reference for later cleanup
+    closeModalListener = function() {
+        const errorModal = document.getElementById('errorModal');
+        if (errorModal) {
+            errorModal.style.display = 'none';
+        }
+    };
+    
+    const closeModalBtn = document.getElementById('closeModal');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModalListener);
+    }
+    
+    // Check web3 connection
+    web3.eth.net.isListening()
+        .then(() => console.log('Web3 is connected'))
+        .catch(err => {
+            console.log('Web3 connection error:', err);
+            const errorMessage = document.getElementById('errorMessage');
+            const errorModal = document.getElementById('errorModal');
+            
+            if (errorMessage && errorModal) {
+                errorMessage.textContent = "Failed to connect to blockchain network";
+                errorModal.style.display = 'block';
+            }
+        });
+        
+    // cleanup for event listeners when page is unloaded
+    window.addEventListener('unload', function() {
+        if (closeModalListener) {
+            const closeModalBtn = document.getElementById('closeModal');
+            if (closeModalBtn) {
+                closeModalBtn.removeEventListener('click', closeModalListener);
+            }
+        }
     });
 });
 
-// Store wallet data in localStorage
-function storeWalletData(address, privateKey) {
-    localStorage.setItem('walletAddress', address);
-    localStorage.setItem('privateKey', privateKey);
-}
-
-// Get wallet data from localStorage
-function getWalletData() {
-    return {
-        address: localStorage.getItem('walletAddress'),
-        privateKey: localStorage.getItem('privateKey')
-    };
-}
-
-// Check web3 connection
-web3.eth.net.isListening()
-    .then(() => console.log('Web3 is connected'))
-    .catch(err => {
-        console.log('Web3 connection error:', err);
-        $("#errorMessage").text("Failed to connect to blockchain network");
-        $("#errorModal").css("display", "block");
-    });
-
-// Error handling
 function showError(message) {
+    console.error(message);
+    
     const errorModal = document.getElementById('errorModal');
     const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-    errorModal.style.display = 'block';
+    
+    // Only try to show in the UI if the elements exist
+    if (errorModal && errorMessage) {
+        errorMessage.textContent = message;
+        errorModal.style.display = 'block';
+    }
 }
 
 function showSuccess(message, duration = 5000) {
+    console.log(message); // Always log to console
+
+    const section = document.querySelector('.section');
+    if (!section) return;
+    
     // Remove any existing success message
     const existingSuccess = document.querySelector('.success-message');
     if (existingSuccess) {
         existingSuccess.remove();
     }
 
-    // Create and show new success message
+    // Create new success message at the bottom of the page/section
     const successDiv = document.createElement('div');
     successDiv.className = 'success-message';
     successDiv.textContent = message;
-    
-    // Insert after the last form in the section
-    const section = document.querySelector('.section');
     section.appendChild(successDiv);
     
-    // Auto-hide after specified duration
-    setTimeout(() => {
-        successDiv.remove();
-    }, duration);
+    // Auto-hide the message after the specified duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (successDiv && successDiv.parentNode) {
+                successDiv.remove();
+            }
+        }, duration);
+    }
 }
 
-// Wallet utilities
-function downloadKeystore(keystore, address) {
-    const element = document.createElement('a');
-    const keystoreBlob = new Blob([JSON.stringify(keystore, null, 2)], { type: 'text/json' });
-    element.href = URL.createObjectURL(keystoreBlob);
-    element.download = `UTC--${new Date().toISOString()}--${address}.json`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-}
-
-// Contract utilities
-function getContractABI() {
-    return [
-        // ERC20 standard functions
-        "function balanceOf(address account) view returns (uint256)",
-        "function transfer(address to, uint256 amount) returns (bool)",
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)",
-        
-        // Custom ticket functions
-        "function ticketPrice() view returns (uint256)",
-        "function vendor() view returns (address)",
-        "function buyTickets(uint256 numberOfTickets) payable",
-        "function useTicket(uint256 numberOfTickets)",
-        
-        // Events
-        "event Transfer(address indexed from, address indexed to, uint256 value)",
-        "event Approval(address indexed owner, address indexed spender, uint256 value)",
-        "event TicketPurchased(address indexed buyer, uint256 amount)",
-        "event TicketRefunded(address indexed holder, uint256 amount)"
-    ];
-}
-
-// Format utilities
 function formatAddress(address) {
     if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
@@ -132,44 +144,74 @@ function formatEther(wei) {
     return parseFloat(web3.utils.fromWei(wei, 'ether')).toFixed(6);
 }
 
-// Network utilities
-async function getNetworkInfo() {
-    try {
-        const networkId = await web3.eth.net.getId();
-        const networkType = await web3.eth.net.getNetworkType();
-        return {
-            id: networkId,
-            type: networkType,
-            name: getNetworkName(networkId)
-        };
-    } catch (error) {
-        console.error('Error getting network info:', error);
-        return null;
+let currentWallet; 
+let keystore;
+let isTransactionPending = false;
+
+function setLoading(buttonId, isLoading) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+    
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
     }
 }
 
-function getNetworkName(networkId) {
-    const networks = {
-        1: 'Ethereum Mainnet',
-        3: 'Ropsten Testnet',
-        4: 'Rinkeby Testnet',
-        5: 'Goerli Testnet',
-        42: 'Kovan Testnet',
-        11155111: 'Sepolia Testnet'
+async function loadWallet() {
+    const fileInput = document.getElementById('keystoreFile');
+    const password = document.getElementById('password').value;
+
+    if (!fileInput.files[0]) {
+        showError('Please select a keystore file');
+        return;
+    }
+
+    setLoading('loadWallet', true);
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            keystore = JSON.parse(e.target.result);
+            currentWallet = await web3.eth.accounts.decrypt(keystore, password);
+            
+            const walletAddressElement = document.getElementById('walletAddress');
+            if (walletAddressElement) {
+                walletAddressElement.textContent = currentWallet.address;
+            }
+            
+            const balance = await web3.eth.getBalance(currentWallet.address);
+            const ethBalanceElement = document.getElementById('ethBalance');
+            if (ethBalanceElement) {
+                ethBalanceElement.textContent = web3.utils.fromWei(balance, 'ether');
+            }
+            
+            if (contract) {
+                const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+                const currentTicketsElement = document.getElementById('currentTickets');
+                if (currentTicketsElement) {
+                    currentTicketsElement.textContent = ticketBalance;
+                }
+            }
+
+            // Trigger a custom event that pages can listen for
+            const event = new CustomEvent('walletLoaded', { detail: currentWallet });
+            document.dispatchEvent(event);
+            
+            return currentWallet;
+        } catch (error) {
+            showError('Failed to decrypt wallet: ' + error.message);
+        } finally {
+            setLoading('loadWallet', false);
+        }
     };
-    return networks[networkId] || 'Unknown Network';
+    reader.readAsText(fileInput.files[0]);
 }
 
-// Export utilities if using modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        showError,
-        showSuccess,
-        downloadKeystore,
-        getContractABI,
-        formatAddress,
-        formatEther,
-        getNetworkInfo,
-        getNetworkName
-    };
-}
+// global variables
+window.web3 = web3;
+window.contract = contract;
+window.setLoading = setLoading;
+window.loadWallet = loadWallet;

@@ -1,129 +1,3 @@
-let contract;
-let currentWallet;
-const contractAddress = '0x77481B4bd23Ef04Fbd649133E5955b723863C52D';
-let isTransactionPending = false; // Track if there's a pending transaction
-
-const contractABI = [
-    {
-        "inputs": [],
-        "name": "ticketPrice",
-        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "vendor",
-        "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
-        "name": "balanceOf",
-        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [{ "internalType": "uint256", "name": "numberOfTickets", "type": "uint256" }],
-        "name": "buyTickets",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [{ "internalType": "uint256", "name": "numberOfTickets", "type": "uint256" }],
-        "name": "useTicket",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
-
-async function initWeb3() {
-    // List of Holesky RPC providers to try in order
-    const rpcProviders = [
-        "https://ethereum-holesky.publicnode.com",
-        "https://1rpc.io/holesky",
-        "https://holesky.api.onfinality.io/public",
-        "https://holesky.blockpi.network/v1/rpc/public",
-        "https://holesky.drpc.org"
-    ];
-    
-    // Use MetaMask if available
-    if (typeof window.ethereum !== 'undefined') {
-        window.web3 = new Web3(window.ethereum);
-        try {
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
-            console.log("Using MetaMask provider");
-            return true;
-        } catch (error) {
-            console.warn("MetaMask connection failed, trying other RPC providers");
-            // Fall through to RPC providers
-        }
-    }
-    
-    // Try each RPC provider until one works
-    for (const rpcUrl of rpcProviders) {
-        try {
-            console.log(`Trying RPC provider: ${rpcUrl}`);
-            window.web3 = new Web3(rpcUrl);
-            
-            // Test the connection
-            await window.web3.eth.net.isListening();
-            console.log(`Successfully connected to ${rpcUrl}`);
-            return true;
-        } catch (error) {
-            console.warn(`RPC provider ${rpcUrl} failed:`, error.message);
-        }
-    }
-    
-    showError("Failed to connect to any Ethereum RPC provider. Please try again later.");
-    return false;
-}
-
-function setLoading(buttonId, isLoading) {
-    const button = document.getElementById(buttonId);
-    if (isLoading) {
-        button.classList.add('loading');
-        button.disabled = true;
-    } else {
-        button.classList.remove('loading');
-        button.disabled = buttonId === 'useButton' ? !currentWallet || document.getElementById('currentTickets').textContent <= 0 : false;
-    }
-}
-
-async function loadWallet() {
-    const fileInput = document.getElementById('keystoreFile');
-    const password = document.getElementById('password').value;
-
-    if (!fileInput.files[0]) {
-        showError('Please select a keystore file');
-        return;
-    }
-
-    setLoading('loadWallet', true);
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        try {
-            const keystore = JSON.parse(e.target.result);
-            currentWallet = await web3.eth.accounts.decrypt(keystore, password);
-            
-            document.getElementById('walletAddress').textContent = currentWallet.address;
-            
-            if (contract) {
-                await updateBalance();
-            }
-        } catch (error) {
-            showError('Failed to decrypt wallet: ' + error.message);
-        } finally {
-            setLoading('loadWallet', false);
-        }
-    };
-    reader.readAsText(fileInput.files[0]);
-}
-
 async function redeemTickets() {
     if (!currentWallet || !contract) {
         showError('Please load your wallet first');
@@ -183,7 +57,7 @@ async function redeemTickets() {
                         setLoading('useButton', false);
                         isTransactionPending = false; // Reset transaction pending status
                     }
-                }, 3000);
+                }, 1000);
             })
             .on('error', (error) => {
                 console.error('Transaction error:', error);
@@ -229,16 +103,20 @@ async function updateBalance() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    if (await initWeb3()) {
-        if (contractAddress) {
-            contract = new web3.eth.Contract(contractABI, contractAddress);
-        }
+// Handle wallet loaded event
+async function handleWalletLoaded(event) {
+    currentWallet = event.detail; 
+    
+    const useButton = document.getElementById('useButton');
+    if (useButton) {
+        // Enable button only if user has tickets
+        const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+        useButton.disabled = ticketBalance <= 0;
     }
+}
 
-    document.getElementById('loadWallet').addEventListener('click', loadWallet);
-    document.getElementById('useButton').addEventListener('click', redeemTickets);
-    document.getElementById('closeModal').addEventListener('click', () => {
-        document.getElementById('errorModal').style.display = 'none';
-    });
+document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('walletLoaded', handleWalletLoaded);
+        document.getElementById('loadWallet').addEventListener('click', loadWallet);
+        document.getElementById('useButton').addEventListener('click', redeemTickets);
 });
