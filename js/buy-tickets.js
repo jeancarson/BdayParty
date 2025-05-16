@@ -17,6 +17,25 @@ async function updateEventInfo() {
     }
 }
 
+function handleTransactionError(error, isPrepError = false) {
+    console.error(isPrepError ? 'Purchase preparation error:' : 'Transaction error:', error);
+    
+    if (error.message.includes('already known')) {
+        showSuccess('Your transaction was already submitted and is being processed.');
+    } else if (error.message.includes('insufficient funds')) {
+        showError('You do not have enough ETH to complete this purchase.');
+    } else if (error.message.includes('Not enough tickets available')) {
+        showError('There are not enough tickets available for purchase.');
+    } else if (error.message.includes('gas required exceeds allowance')) {
+        showError('Transaction would exceed gas limits. Try purchasing fewer tickets.');
+    } else {
+        showError(`Failed to ${isPrepError ? 'prepare' : 'process'} transaction: ${error.message}`);
+    }
+
+    setLoading('purchaseButton', false);
+    isTransactionPending = false;
+}
+
 //basically multiply the ticket price by the number of tickets being bought
 function updateTotalCost() {
     const ticketPrice = parseFloat(document.getElementById('ticketPrice').textContent);
@@ -101,71 +120,37 @@ async function purchaseTickets() {
 
         //send transaction
         web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-            .on('transactionHash', (hash) => {
+            .on('transactionHash', async (hash) => {
                 console.log('Transaction hash:', hash);
                 showSuccess('Transaction sent! Transaction hash: ' + hash);
                 
-                setTimeout(async () => {
-                    try {
-                        await updateEventInfo();
-                        const balance = await web3.eth.getBalance(currentWallet.address);
-                        document.getElementById('ethBalance').textContent = web3.utils.fromWei(balance, 'ether');
-                        
-                        const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
-                        document.getElementById('currentTickets').textContent = ticketBalance;
-                    } catch (updateError) {
-                        console.error('Balance update error:', updateError);
-                    } finally {
-                        setLoading('purchaseButton', false);
-                        isTransactionPending = false;
-                    }
-                }, 1000);
-            })
-            .on('error', (error) => {
-                //Some friendlier messages for expected errors
-                console.error('Transaction error:', error);
-                if (error.message.includes('already known')) {
-                    showSuccess('Your transaction was already submitted and is being processed.');
-                } else if (error.message.includes('insufficient funds')) {
-                    showError('You do not have enough ETH to complete this purchase. The transaction failed due to insufficient funds.');
-                } else if (error.message.includes('Not enough tickets available')) {
-                    showError('There are not enough tickets available for purchase.');
-                } else {
-                    showError('Failed to purchase tickets: ' + error.message);
+                try {
+                    await updateEventInfo();
+                    const balance = await web3.eth.getBalance(currentWallet.address);
+                    document.getElementById('ethBalance').textContent = web3.utils.fromWei(balance, 'ether');
+                    
+                    const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
+                    document.getElementById('currentTickets').textContent = ticketBalance;
+                } catch (updateError) {
+                    console.error('Balance update error:', updateError);
+                } finally {
+                    setLoading('purchaseButton', false);
+                    isTransactionPending = false;
                 }
-                setLoading('purchaseButton', false);
-                isTransactionPending = false;
-            });
+            })
+            .on('error', (error) => handleTransactionError(error));
     } catch (error) {
-        console.error('Purchase preparation error:', error);
-        //some friendlier messages for expected errors
-        if (error.message.includes('gas required exceeds allowance')) {
-            showError('Transaction would exceed gas limits. Try purchasing fewer tickets.');
-        } else if (error.message.includes('insufficient funds')) {
-            showError('You do not have enough ETH to complete this purchase.');
-        } else {
-            showError('Failed to prepare transaction: ' + error.message);
-        }
-        
-        setLoading('purchaseButton', false);
-        isTransactionPending = false;
+        handleTransactionError(error, true);
     }
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        setTimeout(async () => {
-            try {
-                await updateEventInfo();
-            } catch (error) {
-                console.log('Initial contract data fetch failed, will retry on user interaction');
-            }
-        }, 1000);
+        await updateEventInfo();
     } catch (error) {
-        console.log('Initial setup error:', error);
+        console.log('Initial contract data fetch failed, will retry on user interaction');
     }
-    
     document.addEventListener('walletLoaded', handleWalletLoaded);
     document.getElementById('loadWallet').addEventListener('click', loadWallet);
     document.getElementById('numberOfTickets').addEventListener('input', updateTotalCost);

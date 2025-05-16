@@ -134,15 +134,6 @@ function showSuccess(message, duration = 5000) {
     }
 }
 
-function formatAddress(address) {
-    if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-}
-
-function formatEther(wei) {
-    if (!wei) return '0';
-    return parseFloat(web3.utils.fromWei(wei, 'ether')).toFixed(6);
-}
 
 let currentWallet; 
 let keystore;
@@ -209,9 +200,3 @@ async function loadWallet() {
     };
     reader.readAsText(fileInput.files[0]);
 }
-
-// global variables
-window.web3 = web3;
-window.contract = contract;
-window.setLoading = setLoading;
-window.loadWallet = loadWallet;

@@ -2,29 +2,44 @@ function displayKeystoreDetails(keystore) {
     const keystoreInfo = document.getElementById('keystoreInfo');
     keystoreInfo.innerHTML = '';
 
-    // Create a formatted display of all keystore properties
+    //CSS class for indentation
+    keystoreInfo.classList.add('keystore-info');
+
+    // Display main keystore properties
     for (const [key, value] of Object.entries(keystore)) {
         if (key !== 'crypto' && key !== 'Crypto') {
             const detail = document.createElement('p');
+            detail.className = 'keystore-item';
             detail.innerHTML = `<strong>${key}:</strong> ${value}`;
             keystoreInfo.appendChild(detail);
         }
     }
 
-    // Display crypto details separately
+    // Display crypto details with indentation
     const cryptoObj = keystore.crypto || keystore.Crypto;
     if (cryptoObj) {
         const cryptoDetails = document.createElement('div');
+        cryptoDetails.className = 'crypto-details';
         cryptoDetails.innerHTML = '<h4>Encryption Details:</h4>';
         
         for (const [key, value] of Object.entries(cryptoObj)) {
             if (typeof value === 'object') {
-                cryptoDetails.innerHTML += `<p><strong>${key}:</strong></p>`;
+                const section = document.createElement('div');
+                section.className = 'crypto-section';
+                section.innerHTML = `<p class="crypto-header"><strong>${key}:</strong></p>`;
+                
                 for (const [subKey, subValue] of Object.entries(value)) {
-                    cryptoDetails.innerHTML += `<p class="sub-detail"><strong>${subKey}:</strong> ${subValue}</p>`;
+                    const subDetail = document.createElement('p');
+                    subDetail.className = 'crypto-sub-item';
+                    subDetail.innerHTML = `<strong>${subKey}:</strong> ${subValue}`;
+                    section.appendChild(subDetail);
                 }
+                cryptoDetails.appendChild(section);
             } else {
-                cryptoDetails.innerHTML += `<p><strong>${key}:</strong> ${value}</p>`;
+                const detail = document.createElement('p');
+                detail.className = 'crypto-item';
+                detail.innerHTML = `<strong>${key}:</strong> ${value}`;
+                cryptoDetails.appendChild(detail);
             }
         }
         keystoreInfo.appendChild(cryptoDetails);

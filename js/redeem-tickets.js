@@ -59,36 +59,27 @@ async function redeemTickets() {
                     }
                 }, 1000);
             })
-            .on('error', (error) => {
-                console.error('Transaction error:', error);
-                
-                // Handle common errors with more user-friendly messages
-                if (error.message.includes('already known')) {
-                    showSuccess('Your transaction was already submitted and is being processed.', 10000);
-                } else if (error.message.includes('Insufficient tickets')) {
-                    showError('You do not have enough tickets to complete this redemption.');
-                } else {
-                    showError('Failed to redeem tickets: ' + error.message);
-                }
-                
-                setLoading('useButton', false);
-                isTransactionPending = false; // Reset transaction pending status
-            });
+            .on('error', (error) => handleRedemptionError(error));
     } catch (error) {
-        console.error('Redemption preparation error:', error);
-        
-        // Handle preparation errors with more user-friendly messages
-        if (error.message.includes('Insufficient tickets')) {
-            showError('You do not have enough tickets to redeem. Please check your ticket balance.');
-        } else if (error.message.includes('gas required exceeds allowance')) {
-            showError('Transaction would exceed gas limits. Try redeeming fewer tickets.');
-        } else {
-            showError('Failed to prepare transaction: ' + error.message);
-        }
-        
-        setLoading('useButton', false);
-        isTransactionPending = false; // Reset transaction pending status
+        handleRedemptionError(error, true);
     }
+}
+
+function handleRedemptionError(error, isPrepError = false) {
+    console.error(isPrepError ? 'Redemption preparation error:' : 'Transaction error:', error);
+    
+    if (error.message.includes('already known')) {
+        showSuccess('Your transaction was already submitted and is being processed.', 10000);
+    } else if (error.message.includes('Insufficient tickets')) {
+        showError('You do not have enough tickets to redeem. Please check your ticket balance.');
+    } else if (error.message.includes('gas required exceeds allowance')) {
+        showError('Transaction would exceed gas limits. Try redeeming fewer tickets.');
+    } else {
+        showError(`Failed to ${isPrepError ? 'prepare' : 'process'} redemption: ${error.message}`);
+    }
+    
+    setLoading('useButton', false);
+    isTransactionPending = false;
 }
 
 async function updateBalance() {
@@ -117,6 +108,6 @@ async function handleWalletLoaded(event) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('walletLoaded', handleWalletLoaded);
-        document.getElementById('loadWallet').addEventListener('click', loadWallet);
-        document.getElementById('useButton').addEventListener('click', redeemTickets);
+    document.getElementById('loadWallet').addEventListener('click', loadWallet);
+    document.getElementById('useButton').addEventListener('click', redeemTickets);
 });
