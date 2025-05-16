@@ -18,7 +18,7 @@ body {
     font-family: Monaco, monospace;
     line-height: 1.6;
     color: var(--text-color);
-    background: linear-gradient(rgba(255, 255, 255, 0.332), rgba(255, 255, 255, 0.47)), url('balloons.jpg');
+    background: linear-gradient(rgba(255, 255, 255, 0.332), rgba(255, 255, 255, 0.47)), url('../img/balloons.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

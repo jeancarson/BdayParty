@@ -35,9 +35,7 @@ async function handleWalletLoaded(event) {
     }
     
     // Update page after wallet is loaded
-    if (typeof updateEventInfo === 'function') {
-        await updateEventInfo();
-    }
+    await updateEventInfo();
 }
 
 async function purchaseTickets() {
