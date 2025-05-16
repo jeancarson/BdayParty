@@ -200,3 +200,8 @@ async function loadWallet() {
     };
     reader.readAsText(fileInput.files[0]);
 }
+// global variables
+window.web3 = web3;
+window.contract = contract;
+window.setLoading = setLoading;
+window.loadWallet = loadWallet;
