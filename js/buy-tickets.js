@@ -36,24 +36,35 @@ function handleTransactionError(error, isPrepError = false) {
     isTransactionPending = false;
 }
 
+// Parse and validate number of tickets - so we only enable the submit button for natural numbers of tickets
+function getValidTicketCount() {
+    const value = parseInt(document.getElementById('numberOfTickets').value);
+    return !isNaN(value) && value > 0 ? value : 0;
+}
+
+function validateAndUpdateUI() {
+    const ticketCount = getValidTicketCount();
+    const purchaseButton = document.getElementById('purchaseButton');
+    if (purchaseButton) {
+        purchaseButton.disabled = !currentWallet || ticketCount <= 0;
+    }
+    return ticketCount;
+}
+
 //basically multiply the ticket price by the number of tickets being bought
 function updateTotalCost() {
     const ticketPrice = parseFloat(document.getElementById('ticketPrice').textContent);
-    const numberOfTickets = parseInt(document.getElementById('numberOfTickets').value);
+    const numberOfTickets = getValidTicketCount();
     const totalCost = ticketPrice * numberOfTickets;
     document.getElementById('totalCost').textContent = totalCost.toFixed(6);
+    validateAndUpdateUI();
 }
 
 //enable the purchase button only after the wallet is loaded
 async function handleWalletLoaded(event) {
-    currentWallet = event.detail; // Store the wallet locally
+    currentWallet = event.detail; 
+    validateAndUpdateUI();
     
-    const purchaseButton = document.getElementById('purchaseButton');
-    if (purchaseButton) {
-        purchaseButton.disabled = false;
-    }
-    
-    // Update page after wallet is loaded
     await updateEventInfo();
 }
 
@@ -69,7 +80,7 @@ async function purchaseTickets() {
         return;
     }
 
-    const numberOfTickets = parseInt(document.getElementById('numberOfTickets').value);
+    const numberOfTickets = getValidTicketCount();
     if (numberOfTickets <= 0) {
         showError('Please enter a valid number of tickets');
         return;
@@ -101,14 +112,12 @@ async function purchaseTickets() {
             return;
         }
 
-        // Create the transaction
         const tx = contract.methods.buyTickets(numberOfTickets);
         const gas = await tx.estimateGas({ from: currentWallet.address, value: totalCost });
         
-        // Get current nonce to ensure transaction uniqueness
         const nonce = await web3.eth.getTransactionCount(currentWallet.address, 'pending');
         
-        // Sign the transaction
+        // Sign transaction
         const signedTx = await web3.eth.accounts.signTransaction({
             to: contractAddress,
             data: tx.encodeABI(),
@@ -118,7 +127,6 @@ async function purchaseTickets() {
             nonce: nonce
         }, currentWallet.privateKey);
 
-        //send transaction
         web3.eth.sendSignedTransaction(signedTx.rawTransaction)
             .on('transactionHash', async (hash) => {
                 console.log('Transaction hash:', hash);
@@ -144,7 +152,6 @@ async function purchaseTickets() {
     }
 }
 
-// Initialize when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         await updateEventInfo();
@@ -153,6 +160,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     document.addEventListener('walletLoaded', handleWalletLoaded);
     document.getElementById('loadWallet').addEventListener('click', loadWallet);
-    document.getElementById('numberOfTickets').addEventListener('input', updateTotalCost);
+    
+    const ticketInput = document.getElementById('numberOfTickets');
+    ticketInput.addEventListener('input', () => {
+        updateTotalCost();
+        validateAndUpdateUI();
+    });
+    
     document.getElementById('purchaseButton').addEventListener('click', purchaseTickets);
+    validateAndUpdateUI();
 });

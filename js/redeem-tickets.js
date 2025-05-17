@@ -1,3 +1,18 @@
+// Parse and validate number of tickets to redeem
+function getValidTicketCount() {
+    const value = parseInt(document.getElementById('ticketsToRedeem').value);
+    return !isNaN(value) && value > 0 ? value : 0;
+}
+
+function validateAndUpdateUI() {
+    const ticketCount = getValidTicketCount();
+    const useButton = document.getElementById('useButton');
+    if (useButton) {
+        useButton.disabled = !currentWallet || ticketCount <= 0;
+    }
+    return ticketCount;
+}
+
 async function redeemTickets() {
     if (!currentWallet || !contract) {
         showError('Please load your wallet first');
@@ -10,8 +25,8 @@ async function redeemTickets() {
         return;
     }
 
-    const ticketsToRedeem = parseInt(document.getElementById('ticketsToRedeem').value);
-    if (!ticketsToRedeem || ticketsToRedeem <= 0) {
+    const ticketsToRedeem = getValidTicketCount();
+    if (ticketsToRedeem <= 0) {
         showError('Please enter a valid number of tickets to redeem');
         return;
     }
@@ -30,7 +45,6 @@ async function redeemTickets() {
         const tx = contract.methods.useTicket(ticketsToRedeem);
         const gas = await tx.estimateGas({ from: currentWallet.address });
 
-        // Get current nonce to ensure transaction uniqueness
         const nonce = await web3.eth.getTransactionCount(currentWallet.address, 'pending');
 
         const signedTx = await web3.eth.accounts.signTransaction({
@@ -38,16 +52,14 @@ async function redeemTickets() {
             data: tx.encodeABI(),
             gas: gas,
             from: currentWallet.address,
-            nonce: nonce // Add explicit nonce to prevent duplicates
+            nonce: nonce 
         }, currentWallet.privateKey);
 
-        // Send the transaction without waiting for confirmation
         web3.eth.sendSignedTransaction(signedTx.rawTransaction)
             .on('transactionHash', (hash) => {
                 console.log('Transaction hash:', hash);
                 showSuccess(`Transaction sent! ${ticketsToRedeem} tickets redeemed. Transaction hash: ${hash}`, 10000);
                 
-                // Update UI after a short delay
                 setTimeout(async () => {
                     try {
                         await updateBalance();
@@ -97,12 +109,13 @@ async function updateBalance() {
 // Handle wallet loaded event
 async function handleWalletLoaded(event) {
     currentWallet = event.detail; 
+    validateAndUpdateUI();
     
     const useButton = document.getElementById('useButton');
     if (useButton) {
         // Enable button only if user has tickets
         const ticketBalance = await contract.methods.balanceOf(currentWallet.address).call();
-        useButton.disabled = ticketBalance <= 0;
+        useButton.disabled = ticketBalance <= 0 || getValidTicketCount() <= 0;
     }
 }
 
@@ -110,4 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('walletLoaded', handleWalletLoaded);
     document.getElementById('loadWallet').addEventListener('click', loadWallet);
     document.getElementById('useButton').addEventListener('click', redeemTickets);
+    
+    const ticketInput = document.getElementById('ticketsToRedeem');
+    ticketInput.addEventListener('input', validateAndUpdateUI);
+    validateAndUpdateUI();
 });
