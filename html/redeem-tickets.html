@@ -39,7 +39,15 @@
                     <h3>Redeem Your Party Tickets</h3>
                     <div class="form-group">
                         <label for="ticketsToRedeem">Number of Tickets to Redeem:</label>
-                        <input type="number" id="ticketsToRedeem" min="1" value="1">
+                        <input type="text" inputmode="numeric" id="ticketsToRedeem" pattern="[0-9]*" min="1" value="1"
+                        oninput="
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                            if (this.value === '') {
+                            this.value = '0';
+                            } else if (this.value.length > 1 && this.value.startsWith('0')) {
+                            this.value = this.value.replace(/^0+/, '');
+                            }
+                        ">
                     </div>
                     <button id="useButton" class="button-with-spinner" disabled>Redeem Tickets</button>
                 </div>
